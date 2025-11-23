@@ -1,6 +1,6 @@
 ## Architecture
 
-Проєкт реалізовано як WebДодаток з розділенням на FrontendWeb (SPA), BackendAPI (REST-сервіс) та FilmDatabase (реляційна БД). Для зберігання посилань на легальні платформи перегляду використовується окремий компонент ExternalPlatformsAdapter.
+Проєкт реалізовано як WebДодаток на стеку MERN: React (FrontendWeb), Node.js + Express (BackendApi) та MongoDB (FilmDatabase). Дані про фільми та платформи перегляду отримуються через TmdbIntegrationService, який працює з TMDb API і за потреби кешує результати в локальній базі.
 
 ## Overview
 
