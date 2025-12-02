@@ -1,9 +1,9 @@
-≈# Data model – UACinema (моделювання даних)
+# Data model – UACinema (моделювання даних)
 
 У цьому документі моделюємо дані для веб-сайту з українськими фільмами UACinema.  
 Ми виділяємо основні сутності, їх атрибути та типи даних на основі user stories та готової ER-діаграми.
 
-![Data Model](docs/data_model/er_diagram.jpg)
+![Data Model](/docs/data_model/er_diagram.jpg)
 
 ---
 
