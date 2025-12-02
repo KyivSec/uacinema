@@ -7,4 +7,4 @@
 Деталі по компонентах та відповідальностях:
 - [Components](docs/architecture/components.md)
 - [Ownership](docs/architecture/ownership.md)
-- [DataModel](docs/data_model/data_model.md)
+- [Data Model](docs/data_model/data_model.md)
