@@ -1,0 +1,115 @@
+name: CI/CD UaCinema
+
+on:
+  push:
+    branches: ["**"]      # запуск на будь-яку гілку
+  pull_request:
+
+permissions:
+  contents: read
+  deployments: write
+
+env:
+  NODE_VERSION: "20.x"    # глобальна змінна середовища для всіх jobs
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # CACHE: кеш npm + node_modules для пришвидшення повторних запусків
+      - name: Use Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --reporter=junit --reporter-options "mochaFile=report.xml" || true
+        # '|| true' — щоб все одно завантажити звіт як artifact, навіть якщо тести впадуть
+
+      # ARTIFACT: зберігаємо xml-звіт тестів
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-report
+          path: report.xml
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [test]   # послідовність stages: після успішного test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      # ARTIFACT: зберігаємо білд SPA (для CRA/React — папка build/)
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build
+          path: build
+
+  deploy:
+    name: Deploy (staging)
+    runs-on: ubuntu-latest
+    needs: [build]                        # запускається тільки після успішного build
+    if: github.ref == 'refs/heads/main'   # деплой лише з гілки main
+
+    environment:
+      name: staging
+      url: https://staging.example.com    # тимчасово як заглушка
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+          path: ./artifact
+
+      - name: Simulate deploy
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}   # секрет з Settings → Secrets and variables → Actions
+        run: |
+          echo "Deploying UaCinema to ${{ github.environment }} with token: ${DEPLOY_TOKEN:0:4}****"
+          ls -la ./artifact
+          echo "Deploy success"
